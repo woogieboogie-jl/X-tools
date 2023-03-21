@@ -20,8 +20,7 @@ def first_of_month(date):
 
     # Format the date object to the first day of the month
     first_day = date_obj.replace(day=1)
-    return first_day.strftime('%Y-%m-%d')
-
+    return first_day
 
 def extractor(project_name):
     df_dict = {}
@@ -33,7 +32,7 @@ def extractor(project_name):
     for i,column in enumerate(df.values):
         data = {
             '락업해제일자* (yyyy-mm-dd)' : date_first_day,
-            '락업해제수량*': column[1:]
+            '락업해제수량*': [int(num_string.replace(',', '')) for num_string in column[1:]]
         }
         df = pd.DataFrame(data)
         df_dict[column[0]] = data
