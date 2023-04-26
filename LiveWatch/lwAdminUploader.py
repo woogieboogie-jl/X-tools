@@ -2,8 +2,10 @@ import csv
 import pandas as pd
 from datetime import datetime
 import os
+import calendar
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
+
 
 def get_template():
     wb = load_workbook(filename = 'input_csvs/template/xangle_template_unlockschedule.xlsx')
@@ -19,26 +21,48 @@ def first_of_month(date):
     date_obj = datetime.strptime(date, '%Y/%m/%d')
 
     # Format the date object to the first day of the month
-    first_day = date_obj.replace(day=1)
-    return first_day
+    first_day_date = date_obj.replace(day=1)
+    return first_day_date
 
-def extractor(project_name):
+def last_of_month(date):
+    date_obj = datetime.strptime(date, '%Y/%m/%d')
+    last_day = calendar.monthrange(date_obj.year, date_obj.month)[1]
+    last_day_date = date_obj.replace(day=last_day)
+    return last_day_date
+
+def default_month(date):
+    default_date = datetime.strptime(date, '%Y/%m/%d')
+    return default_date
+
+
+
+def extractor(project_name, dateoption):
     df_dict = {}
     df = pd.read_csv(f"input_csvs/{project_name}.csv")
-    date_first_day = [first_of_month(day) for day in df.columns[1:]]
-    if date_first_day[0] == date_first_day[1]:
-        date_first_day = date_first_day[1:]
+
+    if dateoption == "1":
+        date_revised = [default_month(day) for day in df.columns[1:]]
+    elif dateoption == "2":
+        date_revised = [first_of_month(day) for day in df.columns[1:]]
+    else:
+        date_revised = [last_of_month(day) for day in df.columns[1:]]
+
+    if date_revised[0] == date_revised[1]:
+        date_revised = date_revised[1:]
         df = df.drop(columns = df.columns[1])
     for i,column in enumerate(df.values):
+        col_string = [str(num_string) for num_string in column[1:]]
         data = {
-            '락업해제일자* (yyyy-mm-dd)' : date_first_day,
-            '락업해제수량*': [int(num_string.replace(',', '')) for num_string in column[1:]]
+            '락업해제일자* (yyyy-mm-dd)' : date_revised,
+            '락업해제일자': [int(num_string.replace(',', '')) for num_string in col_string]
         }
         df = pd.DataFrame(data)
         df_dict[column[0]] = data
     return df_dict
 
-def excel_writer(project_name, k, v ):
+def excel_writer(project_name, k, v, dateoption):
+    dateoption_str = {"1": "default", "2": "first", "3": "last"}
+
     wb = get_template()
     ws = wb['Sheet1']
     v = pd.DataFrame(v)
@@ -49,7 +73,7 @@ def excel_writer(project_name, k, v ):
             cell = ws.cell(row=r+2, column=c+1)
             cell.value = v.iloc[r,c]
 
-    filename = f'{project_name}/{k}_extracted.xlsx'
+    filename = f'{project_name}/{k}_extracted_{dateoption_str[dateoption]}.xlsx'
     wb.save(filename)
     print(f"{filename} saved!")
 
@@ -58,9 +82,17 @@ def main():
         os.mkdir("input_csvs")
     project_name = input("which project would you like to extract?...")
     is_dir_else_create(project_name)
-    df_dict = extractor(project_name)
+    while True:
+        dateoption = input("""which date format do you wish to apply?...
+    [1] default (as-is) [2] first day of the month [3] last day of the month...""")
+        if dateoption in ["1", "2", "3"]:
+            break
+        else:
+            print("please answer with ONE NUMBER between 1 to 3!...")
+            pass
+    df_dict = extractor(project_name, dateoption)
     for k,v in df_dict.items():
-        excel_writer(project_name, k, v)
+        excel_writer(project_name, k, v, dateoption)
     print(f"{project_name} extraction finished!")
 
 main()
