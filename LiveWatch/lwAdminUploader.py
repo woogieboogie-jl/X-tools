@@ -54,7 +54,8 @@ def extractor(project_name, dateoption):
         col_string = [str(num_string) for num_string in column[1:]]
         data = {
             '락업해제일자* (yyyy-mm-dd)' : date_revised,
-            '락업해제일자': [int(num_string.replace(',', '')) for num_string in col_string]
+            '락업해제일자': [int(num_string.replace(',', '')) if num_string.lower() != 'nan' else 0 for num_string in col_string]
+
         }
         df = pd.DataFrame(data)
         df_dict[column[0]] = data
@@ -73,15 +74,17 @@ def excel_writer(project_name, k, v, dateoption):
             cell = ws.cell(row=r+2, column=c+1)
             cell.value = v.iloc[r,c]
 
-    filename = f'{project_name}/{k}_extracted_{dateoption_str[dateoption]}.xlsx'
+    filename = f'output_csvs/{project_name}/{k}_extracted_{dateoption_str[dateoption]}.xlsx'
     wb.save(filename)
     print(f"{filename} saved!")
 
 def main():
     if not os.path.isdir("input_csvs"):
         os.mkdir("input_csvs")
+    if not os.path.isdir("output_csvs"):
+        os.mkdir("output_csvs")
     project_name = input("which project would you like to extract?...")
-    is_dir_else_create(project_name)
+    is_dir_else_create('output_csvs/' + project_name)
     while True:
         dateoption = input("""which date format do you wish to apply?...
     [1] default (as-is) [2] first day of the month [3] last day of the month...""")
