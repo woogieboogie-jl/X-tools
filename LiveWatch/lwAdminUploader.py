@@ -8,7 +8,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 
 
 def get_template():
-    wb = load_workbook(filename = 'input_csvs/template/xangle_template_unlockschedule.xlsx')
+    wb = load_workbook(filename = 'template/xangle_template_unlockschedule.xlsx')
     return wb
 
 
