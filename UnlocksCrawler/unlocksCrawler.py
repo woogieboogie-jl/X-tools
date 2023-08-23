@@ -20,9 +20,9 @@ def get_slug_tu():
     response = requests.get(url, headers = headers)
     web_content = response.text
     soup = bs(web_content, "html.parser")
-    elements = soup.select("#__next > div.MuiBox-root.emotion-css-12y24eo > div.MuiBox-root.emotion-css-10klw3m > div.container.relative.z-\[300\].mx-auto.flex.min-h-screen.flex-col.gap-\[24px\] > div.MuiBox-root.emotion-css-4wyb8q > div.MuiPaper-root.MuiPaper-elevation.MuiPaper-rounded.MuiPaper-elevation1.emotion-css-1wrw3mp > table > tbody > tr > th > div > a")
+    elements = soup.select("table > tbody > tr.rc-table-row")
     for element in elements:
-        slug_dict[f"{element.find('p').text}"] = element["href"]
+        slug_dict[f"{element.select_one('td > a > div > div > p').text}"] = element.select_one('td > a')["href"]
     return slug_dict
 
 def get_slug_dl():
@@ -58,8 +58,11 @@ def get_slug_tt():
 
 def get_data_tu(slug):
     url = url_dict['token_unlocks'] + slug
+    print(url)
     response = requests.get(url, headers = headers)
     web_content = response.text
+    with open ('testtuhashed.txt', 'w') as file:
+        file.write(web_content)
 
     # Parse the webpage
     soup = bs(web_content, 'html.parser')
@@ -82,9 +85,10 @@ def get_data_dl(slug):
     data = json.loads(script_tag.string)
 
     try:
-        return data['props']['pageProps']['emissions']['chartData']
+        return data['props']['pageProps']['emissions']['chartData']['documented']
     except KeyError:
         print(f"Key not found in data for slug: {slug}")
+        return None
 
 def get_data_tt(slug):
     url = 'https://api.tokenterminal.com/v2/internal/token-unlocks/' + slug
@@ -107,6 +111,7 @@ def to_excel(k,v,chartData,website):
     if website == 1:
         df = pd.DataFrame(chartData)
 
+    # data is from defillama
     elif website == 2:
         df = pd.DataFrame(chartData)
         df['date'] = pd.to_datetime(df['date'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -160,6 +165,7 @@ def __main__():
     if website == 1:
         print("TokenUnlocks\n")
         slug_dict = get_slug_tu()
+        print(slug_dict)
         for k, v  in slug_dict.items():
             chartData = get_data_tu(v)
             print(f"Data for project {k} from TokenUnlocks with slug: {v}")
@@ -170,11 +176,14 @@ def __main__():
         print("Defillama\n")
         slug_dict = get_slug_dl()
         for k, v in slug_dict.items():
-            charData = get_data_dl(v)
+            chartData = get_data_dl(v)
             v = v[8:]
-            print(f"Data for project {k} from DefiLlama with slug: {v}")
-            to_excel(k,v,charData, website)
-            print(f"Exported for project {k}!")
+            if chartData is not None:
+                print(f"Data for project {k} from DefiLlama with slug: {v}")
+                to_excel(k,v,chartData, website)
+                print(f"Exported for project {k}!")
+            else:
+                print(f"unable to get chartdata with slug: {v}")
 
     elif website == 3:
         print("TokenTerminal\n")
