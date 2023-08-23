@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # fileoutput
-output/
+UnlocksCrawler/output/
