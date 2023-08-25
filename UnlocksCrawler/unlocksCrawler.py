@@ -3,8 +3,12 @@ import os
 import pandas as pd
 import json
 import re
+import random
+import time
+from decryptmodule import decrypt_TU
 from bs4 import BeautifulSoup as bs
 
+random_duration = 5
 url_dict = {
     'token_unlocks': 'https://token.unlocks.app',
     'defillama' : 'https://defillama.com',
@@ -57,23 +61,12 @@ def get_slug_tt():
 
 
 def get_data_tu(slug):
-    url = url_dict['token_unlocks'] + slug
-    print(url)
+    url = url_dict['token_unlocks'] + '/api/vesting/chart' + slug + '/vestings/OFFICIAL_PUBLICATION/1/day'
     response = requests.get(url, headers = headers)
     web_content = response.text
-    with open ('testtuhashed.txt', 'w') as file:
-        file.write(web_content)
+    decrypted_data = decrypt_TU(json.loads(web_content))
+    return decrypted_data
 
-    # Parse the webpage
-    soup = bs(web_content, 'html.parser')
-    script_tag = soup.find('script', id='__NEXT_DATA__')
-    data = json.loads(script_tag.string)
-
-    # Get the allocations array
-    try:
-        return data['props']['pageProps']['chartData']
-    except KeyError:
-        print(f"Key not found in data for slug: {slug}")
 
 def get_data_dl(slug):
     url = url_dict['defillama'] + slug
@@ -109,7 +102,19 @@ def to_excel(k,v,chartData,website):
 
     # handles dataframe
     if website == 1:
-        df = pd.DataFrame(chartData)
+        timestamps = [entry["timestamp"] for entry in chartData]
+        vestings = [entry["vestings"] for entry in chartData]
+
+        df = pd.DataFrame(index=timestamps)
+        for day_vestings in vestings:
+            for vesting in day_vestings:
+                label = vesting["label"]
+                amount = vesting["amount"][0]
+                if label not in df.columns:
+                    df[label] = 0
+                df[label] = amount
+        df.index = pd.to_datetime(df.index, unit='ms')
+        df.index.name = 'date'
 
     # data is from defillama
     elif website == 2:
@@ -165,8 +170,10 @@ def __main__():
     if website == 1:
         print("TokenUnlocks\n")
         slug_dict = get_slug_tu()
-        print(slug_dict)
+        print(f"Crawling {len(slug_dict)} Projects from TokenUnlocks:\n")
         for k, v  in slug_dict.items():
+            # Random Crawling Duration
+            time.sleep(random.randint(1,random_duration))
             chartData = get_data_tu(v)
             print(f"Data for project {k} from TokenUnlocks with slug: {v}")
             to_excel(k,v,chartData, website)
@@ -175,7 +182,10 @@ def __main__():
     elif website == 2:
         print("Defillama\n")
         slug_dict = get_slug_dl()
+        print(f"Crawling {len(slug_dict)} Projects from DefiLlama:\n")
         for k, v in slug_dict.items():
+             # Random Crawling Duration
+            time.sleep(random.randint(1,random_duration))
             chartData = get_data_dl(v)
             v = v[8:]
             if chartData is not None:
@@ -188,7 +198,10 @@ def __main__():
     elif website == 3:
         print("TokenTerminal\n")
         slug_dict = get_slug_tt()
+        print(f"Crawling {len(slug_dict)} Projects from TokenTerminal:\n")
         for k, v in slug_dict.items():
+             # Random Crawling Duration
+            time.sleep(random.randint(1,random_duration))
             charData = get_data_tt(v)
             print(f"Data for project {k} from TokenTerminal with slug: {v}")
             to_excel(k,v,charData, website)
