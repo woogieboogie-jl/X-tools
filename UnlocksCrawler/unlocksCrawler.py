@@ -102,19 +102,20 @@ def to_excel(k,v,chartData,website):
 
     # handles dataframe
     if website == 1:
-        timestamps = [entry["timestamp"] for entry in chartData]
-        vestings = [entry["vestings"] for entry in chartData]
-
-        df = pd.DataFrame(index=timestamps)
-        for day_vestings in vestings:
-            for vesting in day_vestings:
+        df = pd.DataFrame()
+        df['date'] = [entry['timestamp'] for entry in chartData]
+        for entry in chartData:
+            for vesting in entry['vestings']:
                 label = vesting["label"]
-                amount = vesting["amount"][0]
+                if isinstance(vesting['amount'], list):
+                    amount = vesting["amount"][0]
+                else:
+                    amount = vesting['amount']
+
                 if label not in df.columns:
                     df[label] = 0
-                df[label] = amount
-        df.index = pd.to_datetime(df.index, unit='ms')
-        df.index.name = 'date'
+                df.at[chartData.index(entry), label] = amount
+        df['date'] = pd.to_datetime(df['date'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # data is from defillama
     elif website == 2:

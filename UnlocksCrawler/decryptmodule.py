@@ -1,5 +1,5 @@
 import json
-from Crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 from base64 import b64decode
 from pandas import DataFrame as df
 
