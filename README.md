@@ -3,6 +3,16 @@ Research Tools for the Xangle Research Team
 ---
 
 ## Tools include
-1. indexcollector.py
+
+1. XIndexcollector.py
 - Collects index data by using Xangle's Price Index API
-- User Friendly CLI (Hopefully..)
+- Currently not supporting because Xangle has native CSV support for indexes (it didn't before)
+
+2. UnlocksCrawler
+- Crawler for getting the necessary unlock schedule data, used for research purposes only
+
+3. XCrawler
+- General-Purpose Crawler, in development but almost never gets updated
+
+4. XLiveWatch
+- All the nitty-gritty jargons related to Xangle's LiveWatch Service, only includes data scraping python codes that are also available on the client side
