@@ -31,20 +31,23 @@ Which Project do you wish to crawl from?\n
 
 ...""")
 
-    web_source = web_source + project_name
-    print(web_source)
+    web_source_with_input = web_source + project_name
+    print(f"looking into: {web_source_with_input}")
 
     try:
         response = requests.get(web_source, headers = headers)
         soup = bs(response.text, 'html.parser')
+        print(soup)
         script_tag = soup.find('script', {'id': '__NEXT_DATA__'})
         # Get the contents of the <script> tag
         json_string = script_tag.string
 
         # Parse the JSON string into a Python dictionary
         data = json.loads(json_string)
+        print(data)
         if web_source_input == "1":
             chart_data = data['props']['pageProps']['chart']
+            print(chart_data)
         else:
             chart_data = data['props']['pageProps']['protocolData']['chainTvls']['injective']['tvl']
             print(chart_data)
@@ -70,7 +73,6 @@ def export_CSV(x,y,filename):
         'TVL': y}
     )
     df.to_csv(f'tvl_data_{filename}.csv', index=False)
-
 def billions(x, pos):
     return '%1.1fB' % (x*1e-9)
 
