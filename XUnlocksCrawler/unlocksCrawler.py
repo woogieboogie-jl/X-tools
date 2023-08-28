@@ -7,6 +7,7 @@ import random
 import time
 from decryptmodule import decrypt_TU
 from bs4 import BeautifulSoup as bs
+from dynamicmodule import get_slug_tu_dynamic
 
 random_duration = 5
 url_dict = {
@@ -20,13 +21,7 @@ headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 
 def get_slug_tu():
     url = url_dict['token_unlocks']
-    slug_dict = {}
-    response = requests.get(url, headers = headers)
-    web_content = response.text
-    soup = bs(web_content, "html.parser")
-    elements = soup.select("table > tbody > tr.rc-table-row")
-    for element in elements:
-        slug_dict[f"{element.select_one('td > a > div > div > p').text}"] = element.select_one('td > a')["href"]
+    slug_dict = get_slug_tu_dynamic(url, headers)
     return slug_dict
 
 def get_slug_dl():
