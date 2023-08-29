@@ -55,11 +55,13 @@ def get_slug_tt():
     return slug_dict
 
 
-def get_data_tu(slug):
-    url = url_dict['token_unlocks'] + '/api/vesting/chart' + slug + '/vestings/OFFICIAL_PUBLICATION/1/day'
+def get_data_tu(slug, inference="OFFICIAL_PUBLICATION"):
+    url = url_dict['token_unlocks'] + '/api/vesting/chart' + slug + '/vestings/' + inference + '/1/day'
     response = requests.get(url, headers = headers)
     web_content = response.text
     decrypted_data = decrypt_TU(json.loads(web_content))
+    if len(decrypted_data) == 1 and inference == 'OFFICIAL_PUBLICATION':
+        get_data_tu(slug, inference='ONCHAIN_INFERRED')
     return decrypted_data
 
 
