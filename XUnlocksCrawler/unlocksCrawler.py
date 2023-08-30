@@ -61,7 +61,7 @@ def get_data_tu(slug, inference="OFFICIAL_PUBLICATION"):
     web_content = response.text
     decrypted_data = decrypt_TU(json.loads(web_content))
     if len(decrypted_data) == 1 and inference == 'OFFICIAL_PUBLICATION':
-        get_data_tu(slug, inference='ONCHAIN_INFERRED')
+        decrypted_data = get_data_tu(slug, inference='ONCHAIN_INFERRED')
     return decrypted_data
 
 
