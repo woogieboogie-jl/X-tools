@@ -42,7 +42,7 @@ def get_slug_tt():
     response = requests.get(url, headers = headers)
     web_content = response.text
     soup = bs(web_content, "html.parser")
-    parent_element = soup.select_one('#main-content > div._2rn9xx0._1cidn1cml._1cidn1cl5._1cidn1cjp._1cidn1cia._1cidn1csd > article > div > div > ol')
+    parent_element = soup.select_one('#main-content > div._2rn9xx0._1cidn1cmm._1cidn1cl6._1cidn1cjq._1cidn1cib._1cidn1cse > article > div > div > ol')
     li_children = parent_element.findChildren("li", recursive=False)
 
     for li in li_children:

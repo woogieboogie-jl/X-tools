@@ -9,7 +9,7 @@ import time
 def get_slug_tu_dynamic(url, headers):
 
     options = webdriver.ChromeOptions()
-    options.add_argument('headless')
+    #options.add_argument('headless')
     options.add_argument("no-sandbox")
     options.add_argument("disable-gpu")
     options.add_argument(f"user-agent={headers['User-Agent']}")
@@ -45,18 +45,14 @@ def get_slug_tu_dynamic(url, headers):
         # Find and click the next button
         button_xpath = f"/html/body/div[2]/div[2]/div[2]/div[4]/div[2]/div[2]/div[2]/div/button[{page + 1}]"
         button = wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath)))
-
-        try:
-            button.click()
-        except ElementClickInterceptedException:
-            # Scroll the button into view and try clicking again
-            driver.execute_script("arguments[0].scrollIntoView(true);", button)
-            button.click()
-
+        driver.execute_script("arguments[0].click();", button)
         time.sleep(2)
 
     # Close the driver
     driver.quit()
+
+
+
 
     return slug_dict
 
