@@ -34,7 +34,8 @@ def get_slug_tu_dynamic(url, headers):
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         elements = soup.select("table > tbody > tr.rc-table-row")
         for element in elements:
-            slug_dict[f"{element.select_one('td > a > div > div > p').text}"] = element.select_one('td > a')["href"]
+            slug_dict[f"{element.select_one('td > a > div > div > p').text}"] = element["data-row-key"]
+        print(slug_dict)
 
         print(f"Extracted data from page {page}")
 

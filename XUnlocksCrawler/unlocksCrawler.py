@@ -42,7 +42,7 @@ def get_slug_tt():
     response = requests.get(url, headers = headers)
     web_content = response.text
     soup = bs(web_content, "html.parser")
-    parent_element = soup.select_one('#main-content > div._2rn9xx0._1cidn1cmm._1cidn1cl6._1cidn1cjq._1cidn1cib._1cidn1cse > article > div > div > ol')
+    parent_element = soup.select_one('#main-content > div > article > div > div > ol')
     li_children = parent_element.findChildren("li", recursive=False)
 
     for li in li_children:
@@ -56,12 +56,15 @@ def get_slug_tt():
 
 
 def get_data_tu(slug, inference="OFFICIAL_PUBLICATION"):
-    url = url_dict['token_unlocks'] + '/api/vesting/chart' + slug + '/vestings/' + inference + '/1/day'
+    url = url_dict['token_unlocks'] + '/api/vesting/chart/' + slug + '/vestings/' + inference + '/1/day'
     response = requests.get(url, headers = headers)
     web_content = response.text
     decrypted_data = decrypt_TU(json.loads(web_content))
-    if len(decrypted_data) == 1 and inference == 'OFFICIAL_PUBLICATION':
-        decrypted_data = get_data_tu(slug, inference='ONCHAIN_INFERRED')
+    if len(decrypted_data) == 1:
+        if inference == 'OFFICIAL_PUBLICATION':
+            decrypted_data = get_data_tu(slug, inference='ONCHAIN_INFERRED')
+        else:
+            print(f"ERROR: Couldn't return viable data from TokenUnlocks API with slug: {slug}")
     return decrypted_data
 
 
