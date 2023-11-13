@@ -7,44 +7,59 @@ import random
 import time
 from decryptmodule import decrypt_TU
 from bs4 import BeautifulSoup as bs
-from dynamicmodule import get_slug_tu_dynamic
+from dynamicmodule import get_slug_tu_dynamic, get_slug_cr_dynamic
 
 random_duration = 5
 url_dict = {
     'token_unlocks': 'https://token.unlocks.app',
     'defillama' : 'https://defillama.com',
-    'token_terminal' : 'https://tokenterminal.com'
+    'token_terminal' : 'https://tokenterminal.com',
+    'crypto_rank' : 'https://cryptorank.io'
 }
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
 
+# Casual Webdata handler
+def get_soup(url, headers):
+    slug_dict = {}
+    response = requests.get(url, headers=headers)
+    soup = bs(response.text, "html.parser")
+    return soup
 
+
+# Token Unlocks Scraping Requires Selenium Webdriver
 def get_slug_tu():
     url = url_dict['token_unlocks']
     slug_dict = get_slug_tu_dynamic(url, headers)
     return slug_dict
 
+# DeFiLlama Scraping, Static Crawling
 def get_slug_dl():
+
+    # presets
     url = url_dict['defillama'] + '/unlocks'
     slug_dict = {}
-    response = requests.get(url, headers = headers)
-    web_content = response.text
-    soup = bs(web_content, "html.parser")
+
+    # data handling
+    soup = get_soup(url,headers)
     elements = soup.select("#__next > div > main > div.sc-ada1eb34-0.fchSFM.sc-a8b09c60-1.ecfugK > table > tbody > tr > td > span > a")
     for element in elements:
         slug_dict[f"{element.text}"] = element["href"]
+
     return slug_dict
 
+# TokenTerminal Scraping, Static Crawling
 def get_slug_tt():
+
+    # presets
     url = url_dict['token_terminal'] + "/terminal/projects"
     slug_dict = {}
 
-    response = requests.get(url, headers = headers)
-    web_content = response.text
-    soup = bs(web_content, "html.parser")
+
+    # data handling
+    soup = get_soup(url, headers)
     parent_element = soup.select_one('#main-content > div > article > div > div > ol')
     li_children = parent_element.findChildren("li", recursive=False)
-
     for li in li_children:
         project_name = li.select_one('li > div > article > a > div > h2').get_text()
         if 'Vesting schedule' in li.get_text():
@@ -53,6 +68,17 @@ def get_slug_tt():
                 slug_dict[project_name] = re.search(r'[^/]*$', child_a['href']).group()
 
     return slug_dict
+
+# CryptoRanks Scraping, Requires Selenium Webdriver
+def get_slug_cr():
+
+    # presets
+    url = url_dict['crypto_rank'] + "/token-unlock"
+
+    # data handling()
+    slug_dict = get_slug_cr_dynamic(url, headers)
+    return slug_dict
+
 
 
 def get_data_tu(slug, inference="OFFICIAL_PUBLICATION"):
@@ -96,11 +122,19 @@ def get_data_tt(slug):
 
     return data
 
+def get_data_cr(slug):
+    url = f'https://api.cryptorank.io/v0/coins/vesting/{slug}'
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    return data
+
 
 
 def to_excel(k,v,chartData,website):
 
-    # handles dataframe
+    # Handles dataframe
+
+    # data is from TokenUnlocks
     if website == 1:
         df = pd.DataFrame()
         df['date'] = [entry['timestamp'] for entry in chartData]
@@ -117,12 +151,13 @@ def to_excel(k,v,chartData,website):
                 df.at[chartData.index(entry), label] = amount
         df['date'] = pd.to_datetime(df['date'], unit='ms').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-    # data is from defillama
+    # data is from Defillama
     elif website == 2:
         df = pd.DataFrame(chartData)
         df['date'] = pd.to_datetime(df['date'], unit='s').dt.strftime('%Y-%m-%dT%H:%M:%SZ')
         df.rename(columns={'date': 'name'}, inplace=True)
 
+    # data is from TokenTerminal
     elif website == 3:
         df = pd.DataFrame(chartData['data'])
         df = df.pivot(index='timestamp', columns='allocation', values='vested')
@@ -135,6 +170,11 @@ def to_excel(k,v,chartData,website):
         for col in df.columns:
             if col != 'name':
                 df[col] = df[col].astype(float)
+
+    # data is from CryptoRank
+    elif website == 4:
+        pass
+
 
     if 'output' not in os.listdir():
         os.mkdir(os.getcwd() + '/' + 'output')
@@ -162,6 +202,7 @@ From which aggregating platforms do you wish to crawl data from?
 [1] TokenUnlocks
 [2] Defillama
 [3] TokenTerminal
+[4] CryptoRank
 ..."""))
 
         if website in range(1,len(url_dict)+1):
@@ -208,5 +249,20 @@ From which aggregating platforms do you wish to crawl data from?
             print(f"Data for project {k} from TokenTerminal with slug: {v}")
             to_excel(k,v,charData, website)
             print(f"Exported for project {k}!")
+
+    elif website == 4:
+        print("CryptoRank\n")
+        slug_dict = get_slug_cr()
+        print(f"Crawling {len(slug_dict)} Projects from CryptoRank:\n")
+        for k, v in slug_dict.items():
+             # Random Crawling Duration
+            time.sleep(random.randint(1,random_duration))
+
+            charData = get_data_cr(v)
+            print(f"Data for project {k} from CryptoRank with slug: {v}")
+            #to_excel(k,v,charData, website)
+            #print(f"Exported for project {k}!")
+
+
 
 __main__()
