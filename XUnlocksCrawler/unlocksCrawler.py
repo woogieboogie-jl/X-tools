@@ -8,7 +8,7 @@ import time
 from decryptmodule import decrypt_TU
 from bs4 import BeautifulSoup as bs
 from dynamicmodule import get_slug_tu_dynamic, get_slug_cr_dynamic
-from dataprocessing import process_data_cr
+from dataprocessingmodule import process_data_cr
 
 random_duration = 5
 url_dict = {
@@ -178,7 +178,9 @@ def to_excel(k,v,chartData,website):
     elif website == 4:
         processed_data = process_data_cr(chartData)
         df = pd.DataFrame.from_dict(processed_data, orient='index').fillna(0)
-        print(df)
+        df = df.applymap(float)
+        df = df.reset_index()
+        df.rename(columns={'index': 'Date'}, inplace=True)
 
     if 'output' not in os.listdir():
         os.mkdir(os.getcwd() + '/' + 'output')

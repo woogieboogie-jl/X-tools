@@ -11,7 +11,7 @@ import re
 def get_slug_tu_dynamic(url, headers):
 
     options = webdriver.ChromeOptions()
-    #options.add_argument('headless')
+    options.add_argument('headless')
     options.add_argument("no-sandbox")
     options.add_argument("disable-gpu")
     options.add_argument(f"user-agent={headers['User-Agent']}")
@@ -37,7 +37,6 @@ def get_slug_tu_dynamic(url, headers):
         elements = soup.select("table > tbody > tr.rc-table-row")
         for element in elements:
             slug_dict[f"{element.select_one('td > a > div > div > p').text}"] = element["data-row-key"]
-        print(slug_dict)
 
         print(f"Extracted data from page {page}")
 
