@@ -93,9 +93,7 @@ def get_slug_cr_dynamic(url, headers):
         for tr in tr_children:
             project_name = tr.find_element(By.CSS_SELECTOR, 'td:nth-child(2) > a > div > div > p').text
             project_link = tr.find_element(By.CSS_SELECTOR, 'td:nth-child(2) > a').get_attribute('href')
-            print(project_link)
             slug = re.search(r'/price/([^/]+)/', project_link).group(1) if re.search(r'/price/([^/]+)/', project_link) else "Not found"
-            print(slug)
             slug_dict[project_name] = slug
 
         time.sleep(2)

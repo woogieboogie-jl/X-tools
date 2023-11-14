@@ -8,6 +8,7 @@ import time
 from decryptmodule import decrypt_TU
 from bs4 import BeautifulSoup as bs
 from dynamicmodule import get_slug_tu_dynamic, get_slug_cr_dynamic
+from dataprocessing import process_data_cr
 
 random_duration = 5
 url_dict = {
@@ -125,8 +126,10 @@ def get_data_tt(slug):
 def get_data_cr(slug):
     url = f'https://api.cryptorank.io/v0/coins/vesting/{slug}'
     response = requests.get(url, headers=headers)
-    data = response.json()
-    return data
+    data_string = response.text.replace("'", '"')
+    return json.loads(data_string)["data"]
+
+
 
 
 
@@ -173,12 +176,12 @@ def to_excel(k,v,chartData,website):
 
     # data is from CryptoRank
     elif website == 4:
-        pass
-
+        processed_data = process_data_cr(chartData)
+        df = pd.DataFrame.from_dict(processed_data, orient='index').fillna(0)
+        print(df)
 
     if 'output' not in os.listdir():
         os.mkdir(os.getcwd() + '/' + 'output')
-
     if website == 1:
         if 'tu' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/tu')
@@ -191,8 +194,11 @@ def to_excel(k,v,chartData,website):
         if 'tt' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/tt')
         url = os.getcwd() + f'/output/tt/chartData_{k}_{v}.xlsx'
+    if website == 4:
+        if 'cr' not in os.listdir('output'):
+            os.mkdir(os.getcwd() + '/output/cr')
+        url = os.getcwd() + f'/output/cr/chartDate_{k}_{v}.xlsx'
     df.to_excel(url, index=False, engine='openpyxl')
-
 
 
 def __main__():
@@ -245,9 +251,9 @@ From which aggregating platforms do you wish to crawl data from?
         for k, v in slug_dict.items():
              # Random Crawling Duration
             time.sleep(random.randint(1,random_duration))
-            charData = get_data_tt(v)
+            chartData = get_data_tt(v)
             print(f"Data for project {k} from TokenTerminal with slug: {v}")
-            to_excel(k,v,charData, website)
+            to_excel(k,v,chartData, website)
             print(f"Exported for project {k}!")
 
     elif website == 4:
@@ -257,11 +263,10 @@ From which aggregating platforms do you wish to crawl data from?
         for k, v in slug_dict.items():
              # Random Crawling Duration
             time.sleep(random.randint(1,random_duration))
-
-            charData = get_data_cr(v)
+            chartData = get_data_cr(v)
             print(f"Data for project {k} from CryptoRank with slug: {v}")
-            #to_excel(k,v,charData, website)
-            #print(f"Exported for project {k}!")
+            to_excel(k,v,chartData, website)
+            print(f"Exported for project {k}!")
 
 
 
