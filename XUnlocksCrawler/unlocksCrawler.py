@@ -187,7 +187,7 @@ def to_excel(k,v,chartData,website):
     if website == 1:
         if 'tu' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/tu')
-        url = os.getcwd() + f'/output/tu/chartData_{k}_{v[1:]}.xlsx'
+        url = os.getcwd() + f'/output/tu/chartData_{k}_{v}.xlsx'
     if website == 2:
         if 'dl' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/dl')
@@ -199,7 +199,7 @@ def to_excel(k,v,chartData,website):
     if website == 4:
         if 'cr' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/cr')
-        url = os.getcwd() + f'/output/cr/chartDate_{k}_{v}.xlsx'
+        url = os.getcwd() + f'/output/cr/chartData_{k}_{v}.xlsx'
     df.to_excel(url, index=False, engine='openpyxl')
 
 
