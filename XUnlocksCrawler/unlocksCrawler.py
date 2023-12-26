@@ -85,28 +85,28 @@ def get_slug_cr():
 
 
 def get_data_tu(slug, inference="OFFICIAL_PUBLICATION"):
-    
+
     url = url_dict['token_unlocks'] + '/api/vesting/chart/' + slug + '/vestings/' + inference + '/1/day'
     response = requests.get(url, headers = headers)
-    if response != 200:
+    if response.status_code != 200:
         print(f"ERROR: Requested Link: {url} is unable to return response from TokenUnlocks API with slug: {slug}")
         return None
     else:
         web_content = response.text
-    
+
     try:
         decrypted_data = decrypt_TU(json.loads(web_content))
-    except *:
+    except:
         print(f"ERROR: Unexpected Error occurred while decrypting the given crypted jsonfile with slug: {slug}")
         return None
-    
+
     if len(decrypted_data) == 1:
         if inference == 'OFFICIAL_PUBLICATION':
             decrypted_data = get_data_tu(slug, inference='ONCHAIN_INFERRED')
         else:
             print(f"ERROR: Couldn't return viable data from TokenUnlocks API with slug: {slug}")
             return None
-    
+
     return decrypted_data
 
 
@@ -261,7 +261,7 @@ From which aggregating platforms do you wish to crawl data from?
                 to_excel(k,v,chartData, website)
                 print(f"Exported for project {k}!")
             else:
-                print(f"unable to get chartdata with slug: {v}")
+                print(f"Unable to get chartdata with slug: {v}")
 
     elif website == 3:
         print("TokenTerminal\n")
