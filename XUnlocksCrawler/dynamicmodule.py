@@ -22,7 +22,7 @@ def get_slug_tu_dynamic(url, headers):
 
     # Extract the number of total pages from the parent component using XPath
     wait = WebDriverWait(driver, 10)
-    total_pages_elem = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[2]/div[2]/div[2]/div[4]/div[2]/div[2]/div[2]/div/button[last()]")))
+    total_pages_elem = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[3]/div[2]/div[5]/div[2]/div[2]/div/button[last()]")))
     total_pages = int(total_pages_elem.text)
 
     print(f"Total pages: {total_pages}")
@@ -34,9 +34,9 @@ def get_slug_tu_dynamic(url, headers):
 
         # Extract the current page's content
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        elements = soup.select("table > tbody > tr.rc-table-row")
+        elements = soup.select("table > tbody > tr.group")
         for element in elements:
-            slug_dict[f"{element.select_one('td > a > div > div > p').text}"] = element["data-row-key"]
+            slug_dict[f"{element.select_one('td > div > a > div > p').text}"] = element.select_one('td > div > a')["href"][1:]
 
         print(f"Extracted data from page {page}")
 
@@ -45,7 +45,7 @@ def get_slug_tu_dynamic(url, headers):
             break
 
         # Find and click the next button
-        button_xpath = f"/html/body/div[2]/div[2]/div[2]/div[4]/div[2]/div[2]/div[2]/div/button[{page + 1}]"
+        button_xpath = f"/html/body/div[3]/div[2]/div[5]/div[2]/div[2]/div/button[{page + 1}]"
         button = wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath)))
         driver.execute_script("arguments[0].click();", button)
         time.sleep(2)

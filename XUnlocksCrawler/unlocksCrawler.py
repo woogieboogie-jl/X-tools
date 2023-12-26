@@ -210,7 +210,7 @@ From which aggregating platforms do you wish to crawl data from?
 [1] TokenUnlocks
 [2] Defillama
 [3] TokenTerminal
-[4] CryptoRank
+[4] CryptoRank(currently broken)
 ..."""))
 
         if website in range(1,len(url_dict)+1):
