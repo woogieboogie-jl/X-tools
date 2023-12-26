@@ -5,6 +5,7 @@ import json
 import re
 import random
 import time
+from datetime import date
 from decryptmodule import decrypt_TU
 from bs4 import BeautifulSoup as bs
 from dynamicmodule import get_slug_tu_dynamic, get_slug_cr_dynamic
@@ -19,6 +20,7 @@ url_dict = {
 }
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
+today = date.today().strftime("%Y-%m-%d")
 
 # Casual Webdata handler
 def get_soup(url, headers):
@@ -83,15 +85,28 @@ def get_slug_cr():
 
 
 def get_data_tu(slug, inference="OFFICIAL_PUBLICATION"):
+    
     url = url_dict['token_unlocks'] + '/api/vesting/chart/' + slug + '/vestings/' + inference + '/1/day'
     response = requests.get(url, headers = headers)
-    web_content = response.text
-    decrypted_data = decrypt_TU(json.loads(web_content))
+    if response != 200:
+        print(f"ERROR: Requested Link: {url} is unable to return response from TokenUnlocks API with slug: {slug}")
+        return None
+    else:
+        web_content = response.text
+    
+    try:
+        decrypted_data = decrypt_TU(json.loads(web_content))
+    except *:
+        print(f"ERROR: Unexpected Error occurred while decrypting the given crypted jsonfile with slug: {slug}")
+        return None
+    
     if len(decrypted_data) == 1:
         if inference == 'OFFICIAL_PUBLICATION':
             decrypted_data = get_data_tu(slug, inference='ONCHAIN_INFERRED')
         else:
             print(f"ERROR: Couldn't return viable data from TokenUnlocks API with slug: {slug}")
+            return None
+    
     return decrypted_data
 
 
@@ -182,24 +197,25 @@ def to_excel(k,v,chartData,website):
         df = df.reset_index()
         df.rename(columns={'index': 'Date'}, inplace=True)
 
+    # export to xlsx file
     if 'output' not in os.listdir():
         os.mkdir(os.getcwd() + '/' + 'output')
     if website == 1:
         if 'tu' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/tu')
-        url = os.getcwd() + f'/output/tu/chartData_{k}_{v}.xlsx'
+        url = os.getcwd() + f'/output/tu/chartData_{k}_{v}_{today}.xlsx'
     if website == 2:
         if 'dl' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/dl')
-        url = os.getcwd() + f'/output/dl/chartData_{k}_{v[1:]}.xlsx'
+        url = os.getcwd() + f'/output/dl/chartData_{k}_{v[1:]}_{today}.xlsx'
     if website == 3:
         if 'tt' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/tt')
-        url = os.getcwd() + f'/output/tt/chartData_{k}_{v}.xlsx'
+        url = os.getcwd() + f'/output/tt/chartData_{k}_{v}_{today}.xlsx'
     if website == 4:
         if 'cr' not in os.listdir('output'):
             os.mkdir(os.getcwd() + '/output/cr')
-        url = os.getcwd() + f'/output/cr/chartData_{k}_{v}.xlsx'
+        url = os.getcwd() + f'/output/cr/chartData_{k}_{v}_{today}.xlsx'
     df.to_excel(url, index=False, engine='openpyxl')
 
 
@@ -226,9 +242,10 @@ From which aggregating platforms do you wish to crawl data from?
             # Random Crawling Duration
             time.sleep(random.randint(1,random_duration))
             chartData = get_data_tu(v)
-            print(f"Data for project {k} from TokenUnlocks with slug: {v}")
-            to_excel(k,v,chartData, website)
-            print(f"Exported for project {k}!")
+            if chartData:
+                print(f"Data for project {k} from TokenUnlocks with slug: {v}")
+                to_excel(k,v,chartData, website)
+                print(f"Exported for project {k}!")
 
     elif website == 2:
         print("Defillama\n")
