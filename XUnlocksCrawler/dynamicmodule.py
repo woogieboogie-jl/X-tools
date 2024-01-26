@@ -9,7 +9,6 @@ import re
 
 
 def get_slug_tu_dynamic(url, headers):
-
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
     options.add_argument("no-sandbox")
@@ -20,40 +19,41 @@ def get_slug_tu_dynamic(url, headers):
     driver = webdriver.Chrome(options=options)
     driver.get(url)
 
-    # Extract the number of total pages from the parent component using XPath
     wait = WebDriverWait(driver, 10)
-    total_pages_elem = wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[3]/div[2]/div[5]/div[2]/div[2]/div/button[last()]")))
-    total_pages = int(total_pages_elem.text)
+    try:
+        # Extract the number of total pages from the parent component using XPath
+        total_pages_elem = wait.until(EC.presence_of_element_located(
+            (By.XPATH, "/html/body/div/div[3]/div[2]/div[6]/div[2]/div[2]/div/button[last()]")))
+        total_pages = int(total_pages_elem.text)
 
-    print(f"Total pages: {total_pages}")
+        print(f"Total pages: {total_pages}")
 
-    slug_dict = {}
+        slug_dict = {}
+        for page in range(1, total_pages + 1):
+            print(f"Extracting data from page {page}/{total_pages}")
 
-    # Loop through each pagination button and click it
-    for page in range(1, total_pages + 1):
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            elements = soup.select("table > tbody > tr.group")
+            for element in elements:
+                slug_dict[f"{element.select_one('td > a > div > p').text}"] = element.select_one('td > a')["href"][1:]
 
-        # Extract the current page's content
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        elements = soup.select("table > tbody > tr.group")
-        for element in elements:
-            slug_dict[f"{element.select_one('td > div > a > div > p').text}"] = element.select_one('td > div > a')["href"][1:]
+            print(f"Extracted data from page {page}/{total_pages}")
 
-        print(f"Extracted data from page {page}")
+            if page < total_pages:
+                # Find and click the next button
+                next_button_xpath = "/html/body/div/div[3]/div[2]/div[6]/div[2]/div[2]/button[last()]"
+                next_button = wait.until(EC.element_to_be_clickable((By.XPATH, next_button_xpath)))
+                driver.execute_script("arguments[0].click();", next_button)
+                wait.until(EC.staleness_of(next_button))  # wait until the old button is stale
 
-        # If we're on the last page, break
-        if page == total_pages:
-            break
-
-        # Find and click the next button
-        button_xpath = f"/html/body/div[3]/div[2]/div[5]/div[2]/div[2]/div/button[{page + 1}]"
-        button = wait.until(EC.element_to_be_clickable((By.XPATH, button_xpath)))
-        driver.execute_script("arguments[0].click();", button)
-        time.sleep(2)
-
-    # Close the driver
-    driver.quit()
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        # Close the driver
+        driver.quit()
 
     return slug_dict
+
 
 
 def get_slug_cr_dynamic(url, headers):
