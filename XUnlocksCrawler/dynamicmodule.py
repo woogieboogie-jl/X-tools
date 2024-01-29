@@ -3,8 +3,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import ElementClickInterceptedException
+from selenium.webdriver.common.action_chains import ActionChains
 from bs4 import BeautifulSoup
 import time
+import random
 import re
 
 
@@ -20,8 +22,8 @@ def get_slug_tu_dynamic(url, headers):
     driver.get(url)
 
     wait = WebDriverWait(driver, 10)
+
     try:
-        # Extract the number of total pages from the parent component using XPath
         total_pages_elem = wait.until(EC.presence_of_element_located(
             (By.XPATH, "/html/body/div/div[3]/div[2]/div[6]/div[2]/div[2]/div/button[last()]")))
         total_pages = int(total_pages_elem.text)
@@ -30,26 +32,39 @@ def get_slug_tu_dynamic(url, headers):
 
         slug_dict = {}
         for page in range(1, total_pages + 1):
-            print(f"Extracting data from page {page}/{total_pages}")
+            try:
+                print(f"Extracting data from page {page}/{total_pages}")
 
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            elements = soup.select("table > tbody > tr.group")
-            for element in elements:
-                slug_dict[f"{element.select_one('td > a > div > p').text}"] = element.select_one('td > a')["href"][1:]
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                elements = soup.select("table > tbody > tr.group")
+                for element in elements:
+                    slug_dict[f"{element.select_one('td > a > div > p').text}"] = element.select_one('td > a')["href"][1:]
 
-            print(f"Extracted data from page {page}/{total_pages}")
+                print(f"Extracted data from page {page}/{total_pages}")
 
-            if page < total_pages:
-                # Find and click the next button
-                next_button_xpath = "/html/body/div/div[3]/div[2]/div[6]/div[2]/div[2]/button[last()]"
+                if page < total_pages:
+                    next_button_xpath = "/html/body/div/div[3]/div[2]/div[6]/div[2]/div[2]/button[last()]"  # Update this XPath
+                    next_button = wait.until(EC.element_to_be_clickable((By.XPATH, next_button_xpath)))
+
+                    driver.execute_script("arguments[0].scrollIntoView(true);", next_button)
+                    ActionChains(driver).move_to_element(next_button).click().perform()
+
+
+                    time.sleep(random.randint(3,5))
+
+
+                    wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div/div[3]/div[2]/div[5]/table[2]/tbody")))
+
+            except Exception as e:
+                print(f"An error occurred on page {page}: {e}")
+                # Re-locate the 'Next' button in case of an error
                 next_button = wait.until(EC.element_to_be_clickable((By.XPATH, next_button_xpath)))
-                driver.execute_script("arguments[0].click();", next_button)
-                wait.until(EC.staleness_of(next_button))  # wait until the old button is stale
+                driver.execute_script("arguments[0].scrollIntoView(true);", next_button)
+                ActionChains(driver).move_to_element(next_button).click().perform()
 
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
-        # Close the driver
         driver.quit()
 
     return slug_dict
