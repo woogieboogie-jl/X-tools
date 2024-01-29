@@ -16,7 +16,7 @@ next_pagination_button_xpath = "/html/body/div/div[3]/div[2]/div[6]/div[2]/div[2
 
 def get_slug_tu_dynamic(url, headers):
     options = webdriver.ChromeOptions()
-    # options.add_argument('headless')
+    options.add_argument('headless')
     options.add_argument("no-sandbox")
     options.add_argument("disable-gpu")
     options.add_argument(f"user-agent={headers['User-Agent']}")
@@ -46,7 +46,7 @@ def get_slug_tu_dynamic(url, headers):
                     slug_dict[f"{element.select_one('td > a > div > p').text}"] = element.select_one('td > a')["href"][1:]
 
                 print(f"Extracted data from page {page}/{total_pages}")
-                pprint.pprint(slug_dict)
+                #pprint.pprint(slug_dict)
 
                 if page < total_pages:
                     next_button_xpath = "/html/body/div/div[3]/div[2]/div[6]/div[2]/div[2]/button[last()]"

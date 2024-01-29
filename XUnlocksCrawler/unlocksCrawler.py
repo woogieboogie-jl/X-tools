@@ -18,27 +18,21 @@ url_dict = {
     'token_terminal' : 'https://tokenterminal.com',
     'crypto_rank' : 'https://cryptorank.io'
 }
+cookies_string = os.environ["COOKIES_STRING_TEMP"]
+# Needed to process cookie data after session-log-in
+def parse_cookies(cookie_string):
+    cookies = {}
+    for cookie in cookie_string.split('; '):
+        key,value = cookie.split('=', 1)
+        cookies[key] = value
+    return cookies
+
+
+cookies = parse_cookies(cookies_string)
+
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
 today = date.today().strftime("%Y-%m-%d")
-cookies = {
-    "_ga": "GA1.1.1849365358.1695608551",
-    "__Host-next-auth.csrf-token": "df6538a92f89ce90541ddaedcd5ee52a774e3cd385a5409c59ab2ea74fa5e166%7Ce5c6869da7f0d8aa1d968e05d8c61b5dcdb431e10d32cb0dbc76351688fe4dbb",
-    "_ga_CYF43L5G47": "GS1.1.1698020942.1.1.1698021075.0.0.0",
-    "_ga_T3LR4ZK89W": "GS1.1.1698020942.2.1.1698021075.0.0.0",
-    "_hjSessionUser_3057115": "eyJpZCI6IjY0ZTQwNjExLTBkZDMtNTZjYS1iNzdhLWMxYmJkYTljMDQ2MCIsImNyZWF0ZWQiOjE2OTY5NDMxNjA2MjEsImV4aXN0aW5nIjp0cnVlfQ==",
-    "__stripe_mid": "f9775e12-d14c-431c-b7cc-fe576aa26f09c29e39",
-    "__Secure-next-auth.callback-url": "https%3A%2F%2Ftoken.unlocks.app%2F1inch",
-    "__Secure-next-auth.state": "",
-    "__Secure-next-auth.pkce.code_verifier": "",
-    "tokenunlocks-session": "23gfq88hd2f",
-    "_hjSession_3057115": "eyJpZCI6IjZlNmU0NWEyLTE3MTktNDFlMC1hMGU1LWJlOWVlM2NkOTFjOCIsImMiOjE3MDYxNzQzMzAyNjUsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=",
-    "__Secure-next-auth.session-token": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..Y8nCuIakyNfKUAmJ.dnUdlX1yyf-W0Dv4WFD6Eegvm36bOi-senP_bGzDdNS4ITbY3OAOjOJDv0d_-Ke3M2yboj16KJ8PBNVlKm1zST1xKFA7FB2xK7ckyDqKXo6yXNoPpQSpmaQNbME7BAuf5Wbs0uOip2X-5MOvHnpOzjbE5k2qqjMK2NLdnhlz6myRUCLA_iok4XM1lZUfAamurQcIlAIQ3iMp1gASjqXmYMqje1DPg4x-aGt8mno81Ea8O9GayHdFW0MueDsdfxXgwoWI6ul2p47lmNlAsHIAR0SHWclMe4xzNUn4jUu4kbsVFcci37f-s1UdgsrOnFoHZ7ywQNJPwgI1FSZIISn5zfof7JXBPUP4DE7oECue6LdVkR9fBmY5fzUX-9ehN4ZstgjfcoFYygIcBRTo9ms282FniJvoqwO3B9HQkbxFUi_hwVvagk2U5CyZgKRJ3_xYnO_Qd_EQ7T6GPF9Lk1PkET8Bnegqfde_qtxunBsWOTMUM0g_Qp0kgpb4mrFK6FW3Miuusb0ZP_H9BIJU-MglxeC8yFiQlQZAHLRghJ-2V7RLWrsQBv9SgCjaSaixY4zjYVDnG5WLUYE5LUSoKP_B6_0Ss1xnx9sa85Cx_AtxA_QyKG5TMqYMDFJUj9qUWNv9oMpUunU37eQ3_zFSRpDucSJooO0DUqBoc7XuJfJUbATeZVzd64M6bjn97yl3W5QMTKOKoqBc0wXitX8788upWF1-MBUGBFcAgwTjtX5KBpUd53_YulEDSFQPZ4dA7l2bd0P2chmz7T8h6Mabd7JQBi3FGetk1zaFpSvdsHe_dmc8f6eULBbHS7hkCwzUma4aQEKC1yXxeeQV1ZKvsDIYa1oP8qhP5B3LOPYY_Z4sjwxR0DUYzC9ggjTDrkrTjt5ExMXOZ1XdcxYHKu6oMLIPAPQkumaR2te9LlzY7HA1RitTK2UZffCAyWsKoZsbPW7dMkv72qimE7EGGyDTwKLK4hvO_F2Utwn5ZTKGH8bhKsxrohSGtvEb-nvQCN1gLxvKNTEMjto9rg6GkQfoyjjuf7OGRQEnMcLd4Kp0kVCPqvbADD8AUm8etv9GI5MJgOd2QH_NpSr2bfU2kn6tbhkHm-5DK9B1V-3oOcSMMgW3T8y6SOcE75iGIR-jh6qAQ1V07OB1Pl7huR-HvGtPHO7RKu67dRzxHMkyKX4mWLOrhwO03yBor6cYariPoo8NeYvOvcKzZH3dNXnNZaTerYroFNg_aBSddiZ31ixu3jE0F_enpSxKVgTWGZksfm04n2VYtzibljR4IANblzY7ZJFR6RiJ_7DUsuOPdqOKEkL5yPv5ykmcLrWxELYn0Chn8g3gJxetibJWiXzbaF2vy9xSXdUgtp12eqAJGRCvUqLpIOicDYCo1xa4R5pSLu7MVJUezWsDA--U1cA1uCzoKaStiz4XMqv0uJHLen8cNdrpiJWkTP7ho6othJrUpsGCI_SsL6uMoUgaDYQgcRyBS_qx3YvX-LgrVpYi2buC0EE0vD3v5FiUILkrY_3IhTdkJ_QucGyloAxPX3bLtg_2mdKX74alHR6lS7ot0f85cMXZnp57Lq7hYqQg6ETd5iw_lO4EaodJ2ZIs4kKtQ08l5etwrO_pzo202EvW-SDgtHOyC07_ERtkw8JBRctFrFAmkQUuAGjz6-zyZjaUdo5z8O7ct0BhJYsC4r4CdS-bA2EN0mPrscuNGC-MicITuqXAga5Fx9LpGbLhDHwrOfTMK_qh-XmPMWbA1mFpUDdocMJYGwZ8eYcJ77HVcH9nnZ2sjkT7_DFfsLgGvUPQUQTWL92MBGkvXtON7AMZGRdkU4mcweeCFQxZdjE58IrWYx3o6-QlF8ARCIrwU3yySOBM0ciGNX3TK9YblvJvAw.bssf8cYkzivVmIJiWSptxw",
-    "amp_96dc34": "4fHX8U7Ie2KcmaaQAzN-cl.MjQ1NDNkNWMtMjk3YS00ZDhmLWJjZjktNDM2NWJlYmE5NWU2..1hkvukdba.1hkvur38q.b3.2.b5",
-    "_ga_75CFN3DMPM": "GS1.1.1706174330.20.1.1706174561.36.0.0"
-}
-
-
 
 # Casual Webdata handler
 def get_soup(url, headers):
@@ -99,7 +93,6 @@ def get_slug_cr():
     # data handling()
     slug_dict = get_slug_cr_dynamic(url, headers)
     return slug_dict
-
 
 
 def get_data_tu(slug, inference="OFFICIAL_PUBLICATION"):
