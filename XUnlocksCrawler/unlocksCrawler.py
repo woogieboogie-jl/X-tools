@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup as bs
 from dynamicmodule import get_slug_tu_dynamic, get_slug_cr_dynamic
 from dataprocessingmodule import process_data_cr
 
+
+
 random_duration = 8
 url_dict = {
     'token_unlocks': 'https://token.unlocks.app',
@@ -18,7 +20,8 @@ url_dict = {
     'token_terminal' : 'https://tokenterminal.com',
     'crypto_rank' : 'https://cryptorank.io'
 }
-cookies_string = os.environ["COOKIES_STRING_TEMP"]
+with open("cookies.txt", "r") as cookies_txt:
+    cookies_string = cookies_txt.read().rstrip()
 # Needed to process cookie data after session-log-in
 def parse_cookies(cookie_string):
     cookies = {}
@@ -29,7 +32,7 @@ def parse_cookies(cookie_string):
 
 
 cookies = parse_cookies(cookies_string)
-
+print(cookies)
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
 today = date.today().strftime("%Y-%m-%d")

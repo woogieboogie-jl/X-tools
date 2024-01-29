@@ -23,7 +23,7 @@ def get_slug_tu_dynamic(url, headers):
 
     driver = webdriver.Chrome(options=options)
     driver.get(url)
-
+    time.sleep(3)
     wait = WebDriverWait(driver, 10)
 
     try:
