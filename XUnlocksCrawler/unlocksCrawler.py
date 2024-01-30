@@ -32,7 +32,6 @@ def parse_cookies(cookie_string):
 
 
 cookies = parse_cookies(cookies_string)
-print(cookies)
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
 today = date.today().strftime("%Y-%m-%d")
@@ -238,8 +237,8 @@ def __main__():
 From which aggregating platforms do you wish to crawl data from?
 [1] TokenUnlocks
 [2] Defillama
-[3] TokenTerminal
-[4] CryptoRank(currently broken)
+[3] TokenTerminal (broken)
+[4] CryptoRank (broken)
 ..."""))
 
         if website in range(1,len(url_dict)+1):
