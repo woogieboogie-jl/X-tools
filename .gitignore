@@ -128,5 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# fileoutput
+# Unlocks Schedule updates & logs
 XUnlocksCrawler/output/
+XUnlocksCrawler/history.json
+XUnlocksCrawler/cookies.txt

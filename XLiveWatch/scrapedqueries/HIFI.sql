@@ -1,0 +1,39 @@
+WITH foundation_list AS (
+  SELECT *
+  FROM (VALUES
+      ('0xd3297c6ab8b7c2d9175a38e3e7f669b286a3296f'),
+      ('0xff3b05dc048bb9cfa137289651a651eeda9f5957')
+    )
+  AS foundation(FOUNDATION)
+),
+  daily_transfers AS (
+    SELECT
+      DATE(BLOCK_TIMESTAMP) as TIMESTAMP,
+      SUM(
+        CASE
+          WHEN FROM_ADDRESS IN (SELECT FOUNDATION FROM foundation_list) THEN - RAW_AMOUNT/POW(10, 18)
+          WHEN TO_ADDRESS IN (SELECT FOUNDATION FROM foundation_list) THEN RAW_AMOUNT/POW(10, 18)
+          ELSE 0
+        END
+      ) AS daily_balance_change
+    FROM
+      ethereum.core.ez_token_transfers
+    WHERE
+      CONTRACT_ADDRESS = LOWER('0x4b9278b94a1112cAD404048903b8d343a810B07e')
+      AND (FROM_ADDRESS in (SELECT FOUNDATION FROM foundation_list) OR TO_ADDRESS in (SELECT FOUNDATION FROM foundation_list))
+      AND NOT (FROM_ADDRESS in (SELECT FOUNDATION FROM foundation_list) AND TO_ADDRESS in (SELECT FOUNDATION FROM foundation_list))
+    GROUP BY TIMESTAMP
+)
+
+SELECT
+DISTINCT TIMESTAMP AS DATE,
+  126250000 - SUM(daily_balance_change) OVER (
+    ORDER BY
+      TIMESTAMP
+  ) AS CIRCULATING,
+  (EXTRACT(EPOCH FROM TIMESTAMP) - 1669852800)/86400 AS DAYS,
+    101250000  + DAYS * 34246.575  AS PLANNED
+FROM
+  daily_transfers
+ORDER BY
+  TIMESTAMP;
