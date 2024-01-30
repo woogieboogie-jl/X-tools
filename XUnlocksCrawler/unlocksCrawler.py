@@ -65,7 +65,7 @@ def get_slug_dl():
 
     return slug_dict
 
-# TokenTerminal Scraping, Static Crawling
+# TokenTerminal Scraping, Static Crawling, Work in Progress (Their Site renovated and need to implement dynamic crawler for this)
 def get_slug_tt():
 
     # presets
@@ -75,10 +75,10 @@ def get_slug_tt():
 
     # data handling
     soup = get_soup(url, headers)
-    parent_element = soup.select_one('#main-content > div > article > div > div > ol')
+    parent_element = soup.select_one('#page-aside > div > nav > ol')
     li_children = parent_element.findChildren("li", recursive=False)
     for li in li_children:
-        project_name = li.select_one('li > div > article > a > div > h2').get_text()
+        project_name = li.select_one(' a > div > div > div > span').get_text()
         if 'Vesting schedule' in li.get_text():
             child_a = li.find('a')
             if child_a and child_a.has_attr('href'):
