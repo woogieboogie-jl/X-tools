@@ -3,8 +3,10 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 
-index_filename = "X30.csv"
 
+
+
+index_filename = "X30.csv"
 
 def read_index():
     df_index = pd.read_csv('')
@@ -61,6 +63,7 @@ def plot(df_price_change_normalized, df_supply_change, period, correlation):
     axs[0].set_title(f'{period} Correlation: {correlation}')
     axs[0].set_xlabel(f'{period} Supply Change (%)')
     axs[0].set_ylabel(f'{period} Price Change (%)')
+
 
 
 def __main__():
