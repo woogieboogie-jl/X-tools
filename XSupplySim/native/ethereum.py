@@ -6,7 +6,7 @@ import requests
 
 load_dotenv()
 # QuickNode Endpoint & Key
-RPC_ENDPOINT_EXECUTION = os.getenv("RPC_ENDPOINT_EXEUCTION")
+RPC_ENDPOINT_EXECUTION = os.getenv("RPC_ENDPOINT_EXECUTION")
 RPC_ENDPOINT_CONSENSUS = os.getenv("RPC_ENDPOINT_CONSENSUS")
 RPC_ENDPOINT_KEY = os.getenv("RPC_ENDPOINT_KEY")
 
@@ -15,7 +15,7 @@ RPC_PRIVATE_ENDPOINT_EXECUTION = os.getenv("RPC_PRIVATE_ENDPOINT_EXECUTION")
 RPC_PRIVATE_ENDPOINT_CONSENSUS = os.getenv("RPC_PRIVATE_ENDPOINT_CONSENSUS")
 
 
-def rpc_request(http_method, endpoint, payload=None):
+def rpc_request(secured, http_method, endpoint, payload=None):
     """
     Sends an RPC request to the specified URL with the given HTTP method and payload.
 
@@ -29,6 +29,12 @@ def rpc_request(http_method, endpoint, payload=None):
     """
 
     headers = {"accept": "application/json"}
+
+    # https connection in case of using external providers
+    if secured:
+        endpoint = "https://" + endpoint
+    else:
+        endpoint = "http://" + endpoint
 
     # Add content-type header for POST requests
     if http_method in ["POST", "PUT", "PATCH"]:
@@ -68,22 +74,38 @@ def rpc_request(http_method, endpoint, payload=None):
 
 
 class EthRPCClientExecution:
-    def __init__(self, endpoint, client_type="execution", local=True):
-        self.endpoint = (
-            RPC_PRIVATE_ENDPOINT_EXECUTION if local else RPC_ENDPOINT_EXECUTION
-        )
+    def __init__(self, client_type="execution", local=True):
+        if local:
+            self.endpoint = "llarmarpc.com/"
+            # self.endpoint = RPC_PRIVATE_ENDPOINT_EXECUTION
+            self.secured = False
+        else:
+            self.endpoint = RPC_ENDPOINT_EXECUTION + "/" + RPC_ENDPOINT_KEY + "/"
+            self.secured = True
 
     def get_block(self, blocknumber):
         http_method = "POST"
         payload = {
             "method": "eth_getBlockByNumber",
-            "params": [hex(blocknumber), False],
+            "params": [str(hex(blocknumber)), False],
             "id": 1,
             "jsonrpc": "2.0",
         }
-        return rpc_request(http_method, self.endpoint, payload)
+        return rpc_request(self.secured, http_method, self.endpoint, payload)
 
-    def latest_blockNumber(self):
+    # uses nephew blockhash and uncleblock's index to induce uncleblock's number
+    def get_uncleblocknumber_by_hash(self, blockhash, idx):
+        http_method = "POST"
+        payload = {
+            "method": "eth_getUncleByBlockHashAndIndex",
+            "params": [blockhash, str(hex(idx))],
+            "id": 1,
+            "jsonrpc": "2.0",
+        }
+        response = rpc_request(self.secured, http_method, self.endpoint, payload)
+        return int(response["result"]["number"], 0)
+
+    def latest_blocknumber(self):
         http_method = "POST"
         payload = {
             "method": "eth_blockNumber",
@@ -91,7 +113,9 @@ class EthRPCClientExecution:
             "id": 1,
             "jsonrpc": "2.0",
         }
-        return rpc_request(http_method, self.endpoint, payload)
+        # returns integer value of the returned hexadecimal blocknumber
+        response = rpc_request(self.secured, http_method, self.endpoint, payload)
+        return int(response["result"], 0)
 
     def get_base_reward(self, blocknumber):
         if blocknumber <= 4369999:
@@ -103,43 +127,47 @@ class EthRPCClientExecution:
         else:
             return None
 
-    # Uncle Reward = (Uncle Block's blockNumber + 8 — currentBlockNumber) *  baseBlockReward/ 8
+    # Uncle Reward = (Uncle Block's blocknumber + 8 — currentBlocknumber) *  baseBlockReward/ 8
     def get_uncle_reward(self, blocknumber):
         baseBlockReward = self.get_base_reward(blocknumber)
-        block = self.get_block(blocknumber)
-        if block.uncles.length > 0:
-            nephew_reward = block.uncles.length * (baseBlockReward / 32)
+        block = self.get_block(blocknumber)["result"]
+        uncleblocks_hash = block["uncles"]
+        if len(uncleblocks_hash) > 0:
+            nephew_reward = len(uncleblocks_hash) * (baseBlockReward / 32)
 
-        for i in range(block.uncles.length):
-            uncleBlock = self.get_Block(block.uncles[i])
+        for i in range(len(uncleblocks_hash)):
+            uncleblock_number = self.get_uncleblocknumber_by_hash(block["hash"], i)
             uncle_reward = (
-                (uncleBlock.number + 8 - block.number) * baseBlockReward
+                (uncleblock_number + 8 - int(block["number"], 0)) * baseBlockReward
             ) / 8
 
         return nephew_reward + uncle_reward
 
 
 class EthRPCClientConsensus:
-    def __init__(self, endpoint, client_type="consensus", local=True):
-        self.endpoint = (
-            RPC_PRIVATE_ENDPOINT_CONSENSUS if local else RPC_ENDPOINT_CONSENSUS
-        )
+    def __init__(self, client_type="consensus", local=True):
+        if local:
+            self.endpoint = RPC_PRIVATE_ENDPOINT_CONSENSUS
+            self.secured = False
+        else:
+            self.endpoint = RPC_ENDPOINT_CONSENSUS + "/" + RPC_ENDPOINT_KEY + "/"
+            self.secured = True
 
     def latest_finalized_epoch(self):
         http_method = "GET"
         endpoint = self.endpoint + "/eth/v1/beacon/headers/finalized"
-        return rpc_request(http_method, endpoint)
+        return rpc_request(self.secured, http_method, endpoint)
 
     def rewards_attestation(self, epoch):
         http_method = "POST"
         endpoint = self.endpoint + f"/eth/v1/beacon/rewards/attestations/{epoch}"
-        return rpc_request(http_method, endpoint)
+        return rpc_request(self.secured, http_method, endpoint)
 
     def rewards_proposer(self, epoch):
         http_method = "POST"
-        endoint = self.endpoint
+        endpoint = self.endpoint
         payload = {}
-        return rpc_request(http_method, endpoint, payload)
+        return rpc_request(self.secured, http_method, endpoint, payload)
 
     def rewards_sync_committee(self, epoch):
         http_method = "POST"
@@ -147,20 +175,3 @@ class EthRPCClientConsensus:
 
     def get_slashed_per_epoch(self, epoch):
         pass
-
-
-# Need Revision
-def compose_endpoint(reward_type, state_id, local=True):
-    if reward_type == "attestation":
-        # query via epoch, state_id = epoch
-        endpoint = f"eth/v1/beacon/rewards/attestations/{state_id}"
-    elif reward_type == "sync_committee":
-        # query via block_id, state_id = block_id
-        endpoint = f"eth/v1/beacon/rewards/sync_committee/{state_id}"
-    elif reward_type == "block":
-        # query via block_id, state_id = block_id
-        endpoint = f"eth/v1/beacon/rewards/blocks/{state_id}"
-    if local:
-        return f"http://{RPC_PRIVATE_ENDPOINT_CONSENSUS}/{endpoint}"
-    else:
-        return f"https://{RPC_ENDPOINT_CONSENSUS}/{RPC_ENDPOINT_KEY}/{endpoint}"
