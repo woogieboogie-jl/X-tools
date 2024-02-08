@@ -5,10 +5,12 @@ import requests
 
 
 load_dotenv()
-
+# QuickNode Endpoint & Key
 RPC_ENDPOINT_EXECUTION = os.getenv("RPC_ENDPOINT_EXEUCTION")
 RPC_ENDPOINT_CONSENSUS = os.getenv("RPC_ENDPOINT_CONSENSUS")
 RPC_ENDPOINT_KEY = os.getenv("RPC_ENDPOINT_KEY")
+
+# Private Node Endpoint(Xangle)
 RPC_PRIVATE_ENDPOINT_EXECUTION = os.getenv("RPC_PRIVATE_ENDPOINT_EXECUTION")
 RPC_PRIVATE_ENDPOINT_CONSENSUS = os.getenv("RPC_PRIVATE_ENDPOINT_CONSENSUS")
 
@@ -124,15 +126,26 @@ class EthRPCClientConsensus:
         )
 
     def latest_finalized_epoch(self):
+        http_method = "GET"
+        endpoint = self.endpoint + "/eth/v1/beacon/headers/finalized"
+        return rpc_request(http_method, endpoint)
+
+    def rewards_attestation(self, epoch):
+        http_method = "POST"
+        endpoint = self.endpoint + f"/eth/v1/beacon/rewards/attestations/{epoch}"
+        return rpc_request(http_method, endpoint)
+
+    def rewards_proposer(self, epoch):
+        http_method = "POST"
+        endoint = self.endpoint
+        payload = {}
+        return rpc_request(http_method, endpoint, payload)
+
+    def rewards_sync_committee(self, epoch):
+        http_method = "POST"
         pass
 
-    def rewards_attestation(self):
-        pass
-
-    def rewards_prposer(self):
-        pass
-
-    def rewards_sync_committee(self):
+    def get_slashed_per_epoch(self, epoch):
         pass
 
 
@@ -148,34 +161,6 @@ def compose_endpoint(reward_type, state_id, local=True):
         # query via block_id, state_id = block_id
         endpoint = f"eth/v1/beacon/rewards/blocks/{state_id}"
     if local:
-        return f"http://{RPC_PRIVATE_ENDPOINT}/{endpoint}"
+        return f"http://{RPC_PRIVATE_ENDPOINT_CONSENSUS}/{endpoint}"
     else:
-        return f"https://{RPC_ENDPOINT}/{RPC_ENDPOINT_KEY}/{endpoint}"
-
-
-def request_node(reward_type, state_id, payload, method="GET", local=False):
-    endpoint = compose_endpoint(reward_type, state_id, local)
-    headers = {"accept": "application/json"}
-
-    if method == "POST":
-        headers["Content-Type"] = "application/json"
-        response = requests.post(url=endpoint, headers=headers, json=payload)
-    else:
-        response = requests.get(url=endpoint, headers=headers)
-
-    return response.json()
-
-
-# Example usage for GET request
-response_get = request_node("block", "6499529", payload={}, method="GET", local=True)
-print(response_get)
-
-# Example usage for POST request
-payload_post = ["294266"]
-response_post = request_node(
-    "attestation", "203110", payload=payload_post, method="POST", local=True
-)
-print(response_post)
-response_post = request_node(
-    "sync_committee", "203110", payload=payload_post, method="POST", local=True
-)
+        return f"https://{RPC_ENDPOINT_CONSENSUS}/{RPC_ENDPOINT_KEY}/{endpoint}"
