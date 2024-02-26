@@ -1,8 +1,9 @@
 import os
 import json
-from dotenv import load_dotenv
 import requests
 
+from dotenv import load_dotenv
+from tqdm import tqdm
 
 load_dotenv()
 # QuickNode Endpoint & Key
@@ -76,8 +77,8 @@ def rpc_request(secured, http_method, endpoint, payload=None):
 class EthRPCClientExecution:
     def __init__(self, client_type="execution", local=True):
         if local:
-            self.endpoint = "llarmarpc.com/"
-            # self.endpoint = RPC_PRIVATE_ENDPOINT_EXECUTION
+            # self.endpoint = "llarmarpc.com/", need to use https 
+            self.endpoint = RPC_PRIVATE_ENDPOINT_EXECUTION
             self.secured = False
         else:
             self.endpoint = RPC_ENDPOINT_EXECUTION + "/" + RPC_ENDPOINT_KEY + "/"
@@ -125,23 +126,26 @@ class EthRPCClientExecution:
         elif blocknumber <= 15537392:
             return 2
         else:
-            return None
+            return 0
 
     # Uncle Reward = (Uncle Block's blocknumber + 8 — currentBlocknumber) *  baseBlockReward/ 8
     def get_uncle_reward(self, blocknumber):
         baseBlockReward = self.get_base_reward(blocknumber)
         block = self.get_block(blocknumber)["result"]
         uncleblocks_hash = block["uncles"]
+        # If uncleblocks_hash (list) is not empty, iterate and add each uncle reward + nephew reward
         if len(uncleblocks_hash) > 0:
             nephew_reward = len(uncleblocks_hash) * (baseBlockReward / 32)
+            for i in range(len(uncleblocks_hash)):
+                uncleblock_number = self.get_uncleblocknumber_by_hash(block["hash"], i)
+                uncle_reward = (
+                    (uncleblock_number + 8 - int(block["number"], 0)) * baseBlockReward
+                ) / 8
+            return nephew_reward + uncle_reward
+            # Else return 0
+        else:
+            return 0
 
-        for i in range(len(uncleblocks_hash)):
-            uncleblock_number = self.get_uncleblocknumber_by_hash(block["hash"], i)
-            uncle_reward = (
-                (uncleblock_number + 8 - int(block["number"], 0)) * baseBlockReward
-            ) / 8
-
-        return nephew_reward + uncle_reward
 
 
 class EthRPCClientConsensus:
@@ -175,3 +179,5 @@ class EthRPCClientConsensus:
 
     def get_slashed_per_epoch(self, epoch):
         pass
+
+

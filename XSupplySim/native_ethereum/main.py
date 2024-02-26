@@ -1,5 +1,7 @@
-import ethereum_py
-import ethereum_cl
+import clientRPC
+import db_manager 
+
+
 
 
 def countBlocks():
@@ -37,12 +39,22 @@ def totalSupplyCL():
 # II. Supply Data from the consensus layer: we consider 1. Attestation Rewards 2. Proposer Rewards, and lastly 3. Sync Committee Rewards, all can be queried via RPC Query, which returns again another json object.
 # III. In Adiition Amount Staked Ethereum on-chain will be queried via consensus layer (and needs to match the number deposited on EL) via an RPC Query mentioned above
 
+if __name__ == '__main__':
+    client_e = EthRPCClientExecution("execution", True)
+    client_c = EthRPCClientConsensus("consensus", True)
+    latest_blocknumber = client_e.latest_blocknumber()
+    totalSupply_latest_blocknumber = 0 
+    progress = tqdm(range(0,latest_blocknumber +1))
+    for blocknumber in progress:
+        progress.set_postfix_str(totalSupply_latest_blocknumber)
+        execution_reward = 0
+        consensus_reward = 0
+        if blocknumber <= 15537592:
+            execution_reward = client_e.get_base_reward(blocknumber) + client_e.get_uncle_reward(blocknumber)
+        totalSupply_latest_blocknumber += execution_reward
+        # consensus layer issues ETH after slot 0 
+        # totalSupply_latest_blocknumber += consensus_reward
+    print(f"Jobs Dones: TotalSupply until Blocknumber:{latest_blocknumber}: {totalSupply_latest_blocknumber}")
 
-def main():
-    pass
 
 
-
-
-if __name__ == "__main__":
-    main()
