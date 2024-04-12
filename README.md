@@ -16,3 +16,6 @@ Research Tools for the Xangle Research Team
 
 4. XLiveWatch
 - All the nitty-gritty jargons related to Xangle's LiveWatch Service, only includes data scraping python codes that are also available on the client side
+
+5. X-ERP-TE-Simulator
+- Test Contracts aimed to test Xangle ERP's Tokenomics Engineering's multi-chain circulating supply estimation functionalities
