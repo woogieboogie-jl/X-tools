@@ -132,3 +132,6 @@ dmypy.json
 XUnlocksCrawler/output/
 XUnlocksCrawler/history.json
 XUnlocksCrawler/cookies.txt
+
+# Database for Each Chain
+XSupplySim/native/*/database
