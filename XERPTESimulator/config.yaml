@@ -17,6 +17,6 @@ CONTRACT_ADDRESS:
     address: "0x9d7F5C16326dfFcd8CD4C06f0c4DA81fba1B6268" # Your contract's address
     abi: "[{\"constant\": true, \"inputs\": [], \"name\": \"name\", \"outputs\": [{\"name\": \"\", \"type\": \"string\"}], \"payable\": false, \"stateMutability\": \"view\", \"type\": \"function\"}]" # Simplified ABI; replace with your contract's actual ABI
 
-PRIVATE_KEY: ''
+PRIVATE_KEY: 'test'
 
 
