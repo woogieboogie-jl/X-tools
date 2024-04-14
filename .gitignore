@@ -135,3 +135,7 @@ XUnlocksCrawler/cookies.txt
 
 # Database for Each Chain
 XSupplySim/native/*/database
+
+
+# Private Keys and other Confidential Data for XERP Testing Account
+/X-tools/XERPTESimulator/config.yaml
